@@ -54,7 +54,7 @@
     <domains>
       <hudson.plugins.active__directory.ActiveDirectoryDomain>
         <name>affichage-p.ch</name>
-        <bindPassword>{AQAAABAAAAAQht9ZemfnXnNmWDRvj2XnnA4V3d0DloUSPmgwBDLEnJc=}</bindPassword>
+        <bindPassword>oldBindPassword</bindPassword>
       </hudson.plugins.active__directory.ActiveDirectoryDomain>
     </domains>
     <startTls>true</startTls>

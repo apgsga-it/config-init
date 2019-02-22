@@ -250,15 +250,15 @@ class PatchInitConfigTest extends Specification {
 			cliAppBackupProps.artifactory.dbpatch.repo.name == "dbpatch"
 			cliAppBackupProps.artifactory.release.repo.name == "releases"
 			cliAppBackupProps.patchRepoName == "yumpatchrepo"
-			cliAppBackupProps.mavenRepoUser == "dev"
+			cliAppBackupProps.mavenRepoUser == "oldMavenRepoUser"
 			cliAppBackupProps.mavenRepoName == "repo"
 						
 			
 			// apg-patch-cli ops.properties + backup	
 			def cliOpsProps = slurpProperties(cliOpsPropertiesFile)
-			cliOpsProps.db.url == "jdbc:oracle:thin:@chei212.apgsga.ch:1521:test"
-			cliOpsProps.db.user == "cm_installer"
-			cliOpsProps.db.passwd == "cm_installer_pass"
+			cliOpsProps.db.url == "jdbc:oracle:thin:@test.apgsga.ch:1521:test"
+			cliOpsProps.db.user == "newDbUser"
+			cliOpsProps.db.passwd == "newDbPasswd"
 			def cliOpsBackupProps = slurpProperties(cliOpsPropertiesBackupFile)
 			cliOpsBackupProps.db.url == "jdbc:oracle:thin:@prod.apgsga.ch:1521:prod"
 			cliOpsBackupProps.db.user == "oldUser"
@@ -267,10 +267,10 @@ class PatchInitConfigTest extends Specification {
 			// apg-patch-service-server application.properties + backup
 			def serverApplicationProps = slurpProperties(serverApplicationPropertiesFile)
 			serverApplicationProps.vcs.host == "cvs-t.apgsga.ch"
-			serverApplicationProps.vcs.user == "svcCvsClient"
+			serverApplicationProps.vcs.user == "newVcsUser"
 			serverApplicationProps.jenkins.host == "https://jenkins-t.apgsga.ch/"
-			serverApplicationProps.jenkins.user == "svcjenkinsclient"
-			serverApplicationProps.jenkins.authkey == "22136e2c863d782f50b568f2c2dfdac0"
+			serverApplicationProps.jenkins.user == "newJenkinsUser"
+			serverApplicationProps.jenkins.authkey == "newJenkinsAuthKey"
 			def serverApplicationBackupProps = slurpProperties(serverApplicationPropertiesBackupFile)
 			serverApplicationBackupProps.vcs.host == "cvs.apgsga.ch"
 			serverApplicationBackupProps.vcs.user == "cvsProdUser"
@@ -316,7 +316,7 @@ class PatchInitConfigTest extends Specification {
 				}
 				
 				if(isRepoRoPasswdOnNextIter) {
-					Assert.that(p.equals("dev1234_test") , "REPO_RO_PASSWD within Jenkins config.xml wrong!")
+					Assert.that(p.equals("newRepoRoPwd") , "REPO_RO_PASSWD within Jenkins config.xml wrong!")
 					isRepoRoPasswdOnNextIter = false
 				}
 				
@@ -352,8 +352,8 @@ class PatchInitConfigTest extends Specification {
 			mavenSettingBackupFile.exists()
 			
 			mavenSettings.servers.server.each({s -> 
-				Assert.that(s.password.equals("dev1234test"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
-				Assert.that(s.username.equals("devTest"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
+				Assert.that(s.password.equals("newMavenUserpwd"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
+				Assert.that(s.username.equals("newMavenUsername"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
 				Assert.that(s.id in ["central-test","snapshots-test","releases-test"], "Maven settings.xml, id wrongly set for ${s.id}")
 			})
 			
@@ -395,10 +395,10 @@ class PatchInitConfigTest extends Specification {
 			result.returnCode == 0
 			Assert.that(gradleProperties.systemProp.http.connectionTimeout.equals("30000"))
 			Assert.that(gradleProperties.systemProp.http.socketTimeout.equals("30000"))
-			Assert.that(gradleProperties.mavenRepoUser.equals("dev-test"))
+			Assert.that(gradleProperties.mavenRepoUser.equals("newMavenRepoUser"))
 			Assert.that(gradleProperties.mavenRepoBaseUrl.equals("https://artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga"))
 			Assert.that(gradleProperties.mavenRepoName.equals("repo-test"))
-			Assert.that(gradleProperties.mavenRepoPwd.equals("dev1234test"))
+			Assert.that(gradleProperties.mavenRepoPwd.equals("newMavenRepoPwd"))
 			Assert.that(gradleProperties.patchRepoName.equals("yumpatchrepo-test"))
 			Assert.that(gradleProperties.org.gradle.caching.equals("false"))
 	}
