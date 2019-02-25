@@ -9,16 +9,6 @@ plugins {
   	id 'com.jfrog.artifactory' version '4.7.3'
   	id 'io.spring.dependency-management' version '1.0.4.RELEASE'
 }
-apply plugin: 'groovy'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'nebula.ospackage'
-apply plugin: 'com.jfrog.artifactory'
-apply plugin: 'ivy-publish'
-apply plugin: 'java'
-apply plugin: "io.spring.dependency-management"
-apply plugin: 'maven-publish'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
 
 description = 'Cli programm, which initalizes Apg Service Configuration for a Platform '
 
