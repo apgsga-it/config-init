@@ -1,0 +1,152 @@
+import org.apache.tools.ant.filters.*;
+
+plugins {
+  	id 'groovy' // extends Java plugin, therefore no need to apply Java plugin
+    id 'application' // facilitates creating an executable JVM application
+	id 'com.github.johnrengelman.shadow' version '2.0.2' // facilitates creation of an "uber-jar"
+  	id 'nebula.ospackage' version '4.10.0' // creation of RPM
+  	id 'ivy-publish' // need Ivy to publish RPM. Artifactory RPM Repos have a flat structure ...
+  	id 'com.jfrog.artifactory' version '4.7.3' // publish to Artifactory, build dependency from Artifactory
+  	id 'io.spring.dependency-management' version '1.0.4.RELEASE' // provides Maven-like dependency management functionality.
+}
+
+description = 'Cli programm, which initalizes Apg Service Configuration for a Platform '
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencyManagement {
+     imports {
+          mavenBom 'com.affichage.common.maven:dm-bom:9.1.0.ADMIN-UIMIG-SNAPSHOT'
+     }
+}
+
+dependencies {
+	compile group: 'org.codehaus.groovy' , name: 'groovy-all' , version: '2.4.13'
+	runtime group: 'commons-cli' , name: 'commons-cli'
+	testCompile group: 'org.springframework', name: 'spring-test'
+	testCompile group: 'org.spockframework' ,name: 'spock-spring'  , version: '1.1-groovy-2.4'
+	testCompile group: 'commons-io', name: 'commons-io'
+}
+
+def finalName = 'apg-patch-target-configinit'
+
+def repoTarget= version.endsWith("SNAPSHOT") ? "snapshots" : "releases"
+
+def savedVersion = '1.3.6'
+
+mainClassName = 'targetConfigInitStarter'
+
+shadowJar {
+	baseName = "${finalName}"
+	classifier = null
+    version = null
+	exclude 'cmd.sh'
+	exclude '**/downloads/*'
+	exclude '**/uploads/*'
+	
+}
+
+repositories {
+		//mavenLocal()
+		maven { 
+		  credentials {
+            	username mavenRepoUser
+            	password mavenRepoPwd
+        	}
+			url "${mavenRepoBaseUrl}/repo" 
+		}
+}
+
+def homeDir = "/opt/${finalName}"
+
+// Netflix Nebula Os Package Configuration, see : https://github.com/nebula-plugins/gradle-ospackage-plugin/wiki
+ospackage {
+	packageName = "${finalName}"
+	version = "${savedVersion}"
+	release = 3
+	os = LINUX
+	type = BINARY
+	arch = NOARCH
+	requires('aps' , "${savedVersion}",  EQUAL)
+	
+	into "${homeDir}"
+	
+	from(shadowJar.outputs.files) {
+		fileMode 0644
+		into 'bin'
+		include '*.*'
+	}
+
+	from('packaging/bin') {
+		include 'apstargetconfiginit.sh'
+		fileMode 0755
+		into 'bin'
+		filter(FixCrLfFilter.class,eol:FixCrLfFilter.CrLf.newInstance("lf"))
+		//expand project.properties
+	}
+	
+	from('packaging/profile') {
+		include 'apstargetconfiginit.sh'
+		fileMode 0644
+		user 'root'
+		permissionGroup 'root'
+		into '/etc/profile.d'
+		filter(FixCrLfFilter.class,eol:FixCrLfFilter.CrLf.newInstance("lf"))
+		//expand project.properties
+	}
+	
+	from("packaging/conf") {
+		into "/etc/opt/${finalName}"
+		include 'init.properties'
+		user 'root'
+		addParentDirs false
+		fileMode 0740
+		filter(FixCrLfFilter.class,eol:FixCrLfFilter.CrLf.newInstance("lf"))
+	}
+
+	
+}
+
+publishing {
+	publications {
+		yumRpm(IvyPublication) {
+			artifact buildRpm.outputs.getFiles().getSingleFile()
+		}
+	}
+	repositories {
+		maven {
+			name ='deployRepo'
+			url  "${mavenRepoBaseUrl}/${repoTarget}/"
+			credentials {
+				username = mavenRepoUser
+				password = mavenRepoPwd
+			}
+		}
+	}
+}
+
+artifactoryPublish {}.dependsOn(buildRpm)
+artifactory {
+    contextUrl = "${mavenRepoBaseUrl}"  
+    publish {
+
+        repository {
+            repoKey = 'yumrepodev'   
+            username = mavenRepoUser
+            password = mavenRepoPwd
+            ivy {
+                 artifactLayout = "${buildRpm.outputs.getFiles().getSingleFile().getName()}"
+            }
+        }
+        defaults {
+            publications ('yumRpm')
+            publishBuildInfo = false  
+            publishArtifacts = true   
+            publishPom = false   
+            publishIvy = false  
+        }
+    }
+}
+
+buildRpm {dependsOn processResources, assemble}
