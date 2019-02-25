@@ -1,33 +1,49 @@
 import org.apache.tools.ant.filters.*;
+
 plugins {
   	id 'groovy'
     id 'application'
 	id 'com.github.johnrengelman.shadow' version '2.0.2'
-  	id 'nebula.ospackage' version '4.6.0'
-  	id 'ivy-publish' 
+  	id 'nebula.ospackage' version '4.10.0'
+  	id 'ivy-publish'
+  	id 'com.jfrog.artifactory' version '4.7.3'
+  	id 'io.spring.dependency-management' version '1.0.4.RELEASE'
 }
 apply plugin: 'groovy'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'nebula.ospackage'
 apply plugin: 'com.jfrog.artifactory'
 apply plugin: 'ivy-publish'
+apply plugin: 'java'
+apply plugin: "io.spring.dependency-management"
+apply plugin: 'maven-publish'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
 
 description = 'Cli programm, which initalizes Apg Service Configuration for a Platform '
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+dependencies {
+	compile group: 'org.codehaus.groovy' , name: 'groovy-all' , version: '2.4.13'
+	runtime group: 'commons-cli' , name: 'commons-cli' , version: '1.4'
+	testCompile group: 'org.springframework', name: 'spring-test' , version: '4.3.1.RELEASE'
+	testCompile group: 'org.spockframework' ,name: 'spock-spring'  , version: '1.1-groovy-2.4'
+	testCompile group: 'commons-io', name: 'commons-io', version: '1.4'
+}
+
 def finalName = 'apg-patch-target-configinit'
 
-mainClassName = 'targetConfigInitStarter'
-
 def repoTarget= version.endsWith("SNAPSHOT") ? "snapshots" : "releases"
+
 jar {
 	baseName = "${finalName}"
 } 
 
+def savedVersion = '1.3.6'
 
-def savedVersion = version
+mainClassName = 'targetConfigInitStarter'
 
 shadowJar {
 	baseName = "${finalName}"
@@ -36,28 +52,18 @@ shadowJar {
 	exclude 'cmd.sh'
 	exclude '**/downloads/*'
 	exclude '**/uploads/*'
+	
 }
 
-dependencies {
-	// Application dependencies
-	compile group: 'org.codehaus.groovy' , name: 'groovy-all'
-	compile group: 'org.codehaus.groovy' , name: 'groovy-backports-compat23'
-	compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations'
-	compile group: 'com.fasterxml.jackson.core', name: 'jackson-core'
-	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
-	compile group: 'org.apache.commons', name: 'commons-io', version: '1.3.2'
-	runtime group: 'commons-cli' , name: 'commons-cli'
-	testCompile group: 'cglib' ,name: 'cglib-nodep' // for stubbing of classes
-	testCompile group: 'org.spockframework' ,name: 'spock-spring'
-	testCompile group: 'org.springframework', name: 'spring-test'
-}
-
-task copyLib( type: Copy ) {
-	into "$project.buildDir/${finalName}"
-	from shadowJar
-	fileMode 0755
-	// In lib we only want jars files to go in lib folder (no dll, exe, bat, etc...)
-	include "*.jar"
+repositories {
+		//mavenLocal()
+		maven { 
+		  credentials {
+            	username mavenRepoUser
+            	password mavenRepoPwd
+        	}
+			url "${mavenRepoBaseUrl}/repo" 
+		}
 }
 
 def homeDir = "/opt/${finalName}"
@@ -77,6 +83,7 @@ ospackage {
 	from(shadowJar.outputs.files) {
 		fileMode 0644
 		into 'bin'
+		include '*.*'
 	}
 
 	from('packaging/bin') {
@@ -150,5 +157,4 @@ artifactory {
     }
 }
 
-assemble { dependsOn copyLib}
 buildRpm {dependsOn processResources, assemble}
