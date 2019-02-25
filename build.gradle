@@ -33,6 +33,7 @@ def finalName = 'apg-patch-target-configinit'
 
 def repoTarget= version.endsWith("SNAPSHOT") ? "snapshots" : "releases"
 
+// TODO JHE: Should the version really match Piper's version? Is it logic or not that both version are the same?
 def savedVersion = '1.3.6'
 
 mainClassName = 'targetConfigInitStarter'
