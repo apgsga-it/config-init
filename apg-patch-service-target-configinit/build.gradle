@@ -5,7 +5,7 @@ plugins {
     id 'application' // facilitates creating an executable JVM application
 	id 'com.github.johnrengelman.shadow' version '2.0.2' // facilitates creation of an "uber-jar"
   	id 'nebula.ospackage' version '4.10.0' // creation of RPM
-  	id 'ivy-publish'
+  	id 'ivy-publish' // need Ivy to publish RPM. Artifactory RPM Repos have a flat structure ...
   	id 'com.jfrog.artifactory' version '4.7.3' // publish to Artifactory, build dependency from Artifactory
   	id 'io.spring.dependency-management' version '1.0.4.RELEASE' // provides Maven-like dependency management functionality.
 }
