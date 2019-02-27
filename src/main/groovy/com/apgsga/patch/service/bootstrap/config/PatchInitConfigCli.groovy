@@ -55,8 +55,19 @@ public class PatchInitConfigCli {
 		}
 		println "Provided configuration file was : ${initConfigFile}"
 		def initConfig = parseConfig(initConfigFile)
+		verifyHost(initConfig)
 		def initClient = new PatchInitConfigClient(initConfig,dryRun)
 		initClient.initAll()
+	}
+	
+	private def verifyHost(def config) {
+		// Aim of this method is to prevent the initialization to occur on an undesired host.
+		// Therefore, the developer must explicitly set the running.host.name property to match the hostname.
+		// This is a very poorman check ... but should just help preventing a bad mistake
+		def hostname = InetAddress.getLocalHost().getHostName()
+		if(!config.running.host.name.equals(hostname)) {
+			throw new RuntimeException("running.host.name property is not set correctly, please verify that you're running the tool on the right environment")
+		}
 	}
 	
 	private def parseConfig(def initConfigFile) {
