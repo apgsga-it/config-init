@@ -93,14 +93,22 @@ class PatchInitConfigTest extends Specification {
 	
 	def gradlePropertiesOriContent
 	
+	def jenkinsNodesPath = "src/test/resources/var/jenkins/nodes"
+	
+	def firstNodePath = "${jenkinsNodesPath}/n1"
+	
+	def secondNodePath = "${jenkinsNodesPath}/n2"
+	
 	def setup() {
 		saveContentOfTestConfigFile()
+		createFakeJenkinsNodes()
 	}
 	
 	def cleanup() {
 		cleanAllBackupFiles()
 		cleanAllDryrunFile()
 		restoreContentOfOriginalTestFiles()
+		deleteFakeJenkinsNodes() // Because some test won't call the method which do it
 	}
 	
 	def "PatchInitConfig validate behavior when no option has been passed"() {
@@ -334,6 +342,21 @@ class PatchInitConfigTest extends Specification {
 			})
 	}
 	
+	def "PatchInitConfig validate init job deleted all Jenkins Nodes"() {
+		when:
+			println "First don't do anything, but just verify that nodes exists before calling init cli ..."
+		then:
+			new File(firstNodePath).exists()
+			new File(secondNodePath).exists()
+		when:
+			PatchInitConfigCli cli = PatchInitConfigCli.create()
+			def result = cli.process(["-dr", "false", "-i","src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
+		then:
+			result.returnCode == 0
+			!(new File(firstNodePath).exists())
+			!(new File(secondNodePath).exists())
+	}
+	
 	def "PatchInitConfig validate init did the job for maven settings.xml"() {
 		when:
 			def mavenSettingFile = new File(mavenSettingFileName)
@@ -511,6 +534,17 @@ class PatchInitConfigTest extends Specification {
 		xmlUtil.serialize(mavenSettingsOriContent,mavenFos)
 		mavenFos.close()
 		
+	}
+	
+	private def createFakeJenkinsNodes() {
+		new File(firstNodePath).mkdirs()
+		new File("${firstNodePath}/test1.txt").createNewFile()
+		new File(secondNodePath).mkdirs()
+		new File("${secondNodePath}/test2.txt").createNewFile()
+	}
+	
+	private def deleteFakeJenkinsNodes() {
+		new File(jenkinsNodesPath).deleteDir()
 	}
 	
 	private def cleanAllBackupFiles() {

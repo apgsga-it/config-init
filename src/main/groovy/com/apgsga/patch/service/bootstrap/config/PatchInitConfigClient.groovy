@@ -32,7 +32,8 @@ class PatchInitConfigClient {
 	def initJenkinsConfig() {
 		println "Initialisation of Jenkins config.xml started ..."
 		backupFile(initConfig.jenkins.jenkinsConfigFileLocation)
-		adaptJenkinsConfig()		
+		adaptJenkinsConfig()	
+		removeJenkinsNodes()	
 		println "Initialisation of Jenkins config.xml done!"
 	}
 
@@ -113,6 +114,33 @@ class PatchInitConfigClient {
 		backupFile(initConfig.gradle.properties.file.path)
 		adaptGradleSettings()
 		println "Initialisation of graddle settings done!"
+	}
+	
+	private def removeJenkinsNodes() {
+		println "Deletion of Jenkins Nodes starting ..."
+		def dirsToDelete = []
+		def dir = new File("${initConfig.jenkins.home.folder}/nodes")
+		dir.traverse(type: FileType.DIRECTORIES) {
+			if(dryRun) {
+				println "${it} folder would have been added to list of directories to be deleted."
+			}
+			else {
+				// it.deleteDir() : doesn't work, probably because of the way Groovy iterates over. Once it has been deleted, we get a NPE at next iter.
+				dirsToDelete.add(it)
+				println "${it} added to list of directories to be deleted."
+			}
+		}
+		
+		dirsToDelete.each { d ->
+			if(dryRun) {
+				println "${d} and all its content would have been deleted."
+			}
+			else {
+				d.deleteDir()
+			}
+			
+		}
+		println "Deletion of Jenkins Nodes done!"
 	}
 	
 	private def adaptGradleSettings() {
