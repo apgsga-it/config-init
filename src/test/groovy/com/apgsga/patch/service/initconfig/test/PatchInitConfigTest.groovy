@@ -29,6 +29,20 @@ class PatchInitConfigTest extends Specification {
 	
 	def graddlePropertiesPath = "src/test/resources/var/jenkins/gradle/home"
 	
+	def yumConfigPath = "src/test/resources/etc/yum.repos.d"
+	
+	def artifactoryRepoConfigFileName = "${yumConfigPath}/apg-artifactory.repo"
+	
+	def artifactoryPatchRepoConfigFileName = "${yumConfigPath}/apg-artifactory-patch.repo"
+	
+	def artifactoryRepoConfigBackupFileName = "${artifactoryRepoConfigFileName}.backup"
+	
+	def artifactoryPatchRepoConfigBackupFileName = "${artifactoryPatchRepoConfigFileName}.backup"
+	
+	def artifactoryRepoConfigDryRunFileName = "${artifactoryRepoConfigFileName}.dryrun"
+	
+	def artifactoryPatchRepoConfigDryRunFileName = "${artifactoryPatchRepoConfigFileName}.dryrun"
+	
 	def targetSystemMappingFileName = "${etcOptPath}/apg-patch-common/TargetSystemMappings.json"
 	
 	def targetSystemMappingBackupFileName = "${targetSystemMappingFileName}.backup"
@@ -92,6 +106,10 @@ class PatchInitConfigTest extends Specification {
 	def mavenSettingsOriContent
 	
 	def gradlePropertiesOriContent
+	
+	def artifactoryRepoPropertiesOriContent
+	
+	def artifactoryPatchRepoPropertiesOriContent
 	
 	def jenkinsNodesPath = "src/test/resources/var/jenkins/nodes"
 	
@@ -442,6 +460,8 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(!(new File(jenkinsConfigXmlBackupFileName).exists()))
 			Assert.that(!(new File(mavenSettingBackupFileName).exists()))
 			Assert.that(!(new File(gradlePropertiesBackupFileName).exists()))
+			Assert.that(!(new File(artifactoryPatchRepoConfigBackupFileName).exists()))
+			Assert.that(!(new File(artifactoryRepoConfigBackupFileName).exists()))
 			
 			Assert.that((new File(targetSystemMappingDryRunFileName).exists()))
 			Assert.that((new File(patchCliApplicationPropertiesDryRunFileName).exists()))
@@ -451,6 +471,8 @@ class PatchInitConfigTest extends Specification {
 			Assert.that((new File(jenkinsConfigXmlDryRunFileName).exists()))
 			Assert.that((new File(mavenSettingDryRunFileName).exists()))
 			Assert.that((new File(gradlePropertiesDryRunFileName).exists()))
+			Assert.that((new File(artifactoryPatchRepoConfigDryRunFileName).exists()))
+			Assert.that((new File(artifactoryRepoConfigDryRunFileName).exists()))
 		when:
 			// Second scenario, we don't provide -dr option, should be dryRun by default
 			result = cli.process(["-i", "src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
@@ -465,6 +487,8 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(!(new File(jenkinsConfigXmlBackupFileName).exists()))
 			Assert.that(!(new File(mavenSettingBackupFileName).exists()))
 			Assert.that(!(new File(gradlePropertiesBackupFileName).exists()))
+			Assert.that(!(new File(artifactoryPatchRepoConfigBackupFileName).exists()))
+			Assert.that(!(new File(artifactoryRepoConfigBackupFileName).exists()))
 			
 			Assert.that((new File(targetSystemMappingDryRunFileName).exists()))
 			Assert.that((new File(patchCliApplicationPropertiesDryRunFileName).exists()))
@@ -474,6 +498,50 @@ class PatchInitConfigTest extends Specification {
 			Assert.that((new File(jenkinsConfigXmlDryRunFileName).exists()))
 			Assert.that((new File(mavenSettingDryRunFileName).exists()))
 			Assert.that((new File(gradlePropertiesDryRunFileName).exists()))
+			Assert.that((new File(artifactoryPatchRepoConfigDryRunFileName).exists()))
+			Assert.that((new File(artifactoryRepoConfigDryRunFileName).exists()))
+	}
+	
+	def "PatchInitConfig validate yum repo configuration"() {
+		when:
+			PatchInitConfigCli cli = PatchInitConfigCli.create()
+			def result = cli.process(["-dr", "false", "-i", "src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
+		then:
+			result.returnCode == 0
+			Assert.that((new File(artifactoryPatchRepoConfigBackupFileName).exists()))
+			Assert.that((new File(artifactoryRepoConfigBackupFileName).exists()))
+			Assert.that((new File(artifactoryPatchRepoConfigFileName).exists()))
+			Assert.that((new File(artifactoryRepoConfigFileName).exists()))
+		when:
+			def artifactoryPatchRepoConfigBackupFileContent = new File(artifactoryPatchRepoConfigBackupFileName).readLines()
+			def artifactoryRepoConfigBackupFileContent = new File(artifactoryRepoConfigBackupFileName).readLines()
+			def artifactoryPatchRepoConfigFileContent = new File(artifactoryPatchRepoConfigFileName).readLines()
+			def artifactoryRepoConfigFileContent = new File(artifactoryRepoConfigFileName).readLines()
+		then:
+			Assert.that(artifactoryPatchRepoConfigBackupFileContent.contains("[apg-artifactory-patch]"))
+			Assert.that(artifactoryPatchRepoConfigBackupFileContent.contains("gpgcheck=0"))
+			Assert.that(artifactoryPatchRepoConfigBackupFileContent.contains("name=APG Artifactory Patch Repository"))
+			Assert.that(artifactoryPatchRepoConfigBackupFileContent.contains("enabled=1"))
+			Assert.that(artifactoryPatchRepoConfigBackupFileContent.contains("baseurl=https://ops:prodPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumpatchrepo"))
+			
+			Assert.that(artifactoryRepoConfigBackupFileContent.contains("[apg-artifactory]"))
+			Assert.that(artifactoryRepoConfigBackupFileContent.contains("gpgcheck=0"))
+			Assert.that(artifactoryRepoConfigBackupFileContent.contains("name=APG Artifactory Repository"))
+			Assert.that(artifactoryRepoConfigBackupFileContent.contains("enabled=1"))
+			Assert.that(artifactoryRepoConfigBackupFileContent.contains("baseurl=https://ops:prodPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumrepoprod"))
+			
+		
+			Assert.that(artifactoryPatchRepoConfigFileContent.contains("[apg-artifactory-patch-test]"))
+			Assert.that(artifactoryPatchRepoConfigFileContent.contains("gpgcheck=0"))
+			Assert.that(artifactoryPatchRepoConfigFileContent.contains("name=APG Artifactory Patch Repository Test"))
+			Assert.that(artifactoryPatchRepoConfigFileContent.contains("enabled=1"))
+			Assert.that(artifactoryPatchRepoConfigFileContent.contains("baseurl=https://ops-test:newPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumpatchrepo-test"))
+			
+			Assert.that(artifactoryRepoConfigFileContent.contains("[apg-artifactory-test]"))
+			Assert.that(artifactoryRepoConfigFileContent.contains("gpgcheck=0"))
+			Assert.that(artifactoryRepoConfigFileContent.contains("name=APG Artifactory Repository Test"))
+			Assert.that(artifactoryRepoConfigFileContent.contains("enabled=1"))
+			Assert.that(artifactoryRepoConfigFileContent.contains("baseurl=https://ops-test:newPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumrepoprod-test"))
 	}
 	
 	private def slurpProperties(def propertyFile) {
@@ -497,6 +565,19 @@ class PatchInitConfigTest extends Specification {
 		jenkinsConfixXmlOriContent = new XmlSlurper().parse(new File(jenkinsConfigXmlFileName))
 		mavenSettingsOriContent = new XmlSlurper().parse(new File(mavenSettingFileName))
 		gradlePropertiesOriContent = ConfigInitUtil.slurpProperties(new File(graddlePropertiesFileName))
+		backupArtifactoryRepoFiles()
+	}
+	
+	private def backupArtifactoryRepoFiles() {
+		Files.copy(new File(artifactoryRepoConfigFileName).toPath(), new File("${artifactoryRepoConfigFileName}.save").toPath())
+		Files.copy(new File(artifactoryPatchRepoConfigFileName).toPath(), new File("${artifactoryPatchRepoConfigFileName}.save").toPath())
+	}
+	
+	private def restoreArtifactoryRepoFiles() {
+		Files.delete(new File(artifactoryRepoConfigFileName).toPath())
+		Files.move(new File("${artifactoryRepoConfigFileName}.save").toPath(), new File(artifactoryRepoConfigFileName).toPath())
+		Files.delete(new File(artifactoryPatchRepoConfigFileName).toPath())
+		Files.move(new File("${artifactoryPatchRepoConfigFileName}.save").toPath(), new File(artifactoryPatchRepoConfigFileName).toPath())
 	}
 	
 	private def restoreContentOfOriginalTestFiles() {
@@ -534,6 +615,8 @@ class PatchInitConfigTest extends Specification {
 		xmlUtil.serialize(mavenSettingsOriContent,mavenFos)
 		mavenFos.close()
 		
+		restoreArtifactoryRepoFiles()
+		
 	}
 	
 	private def createFakeJenkinsNodes() {
@@ -556,6 +639,8 @@ class PatchInitConfigTest extends Specification {
 		new File(jenkinsConfigXmlBackupFileName).delete()
 		new File(mavenSettingBackupFileName).delete()
 		new File(gradlePropertiesBackupFileName).delete()
+		new File(artifactoryRepoConfigBackupFileName).delete()
+		new File(artifactoryPatchRepoConfigBackupFileName).delete()
 	}
 	
 	private def cleanAllDryrunFile() {
@@ -567,6 +652,8 @@ class PatchInitConfigTest extends Specification {
 		new File(jenkinsConfigXmlDryRunFileName).delete()
 		new File(mavenSettingDryRunFileName).delete()
 		new File(gradlePropertiesDryRunFileName).delete()
+		new File(artifactoryRepoConfigDryRunFileName).delete()
+		new File(artifactoryPatchRepoConfigDryRunFileName).delete()
 	}
 	
 }

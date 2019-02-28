@@ -27,6 +27,15 @@ class PatchInitConfigClient {
 		initJenkinsConfig()
 		initMavenSettings()
 		initGradleSettings()
+		initYumRepoConfig()
+	}
+	
+	def initYumRepoConfig() {
+		println "Initialisation of Yum Repo configuration started ..."
+		backupFile(initConfig.yum.artifactory.repo.config.file.path)
+		backupFile(initConfig.yum.artifactory.patch.repo.config.file.path)
+		adaptYumRepoConfig()
+		println "Initialisation of Yum Repo configuration done!"
 	}
 	
 	def initJenkinsConfig() {
@@ -114,6 +123,81 @@ class PatchInitConfigClient {
 		backupFile(initConfig.gradle.properties.file.path)
 		adaptGradleSettings()
 		println "Initialisation of graddle settings done!"
+	}
+	
+	private def adaptYumRepoConfig() {
+		adaptArtifactoryRepo()
+		adaptArtifactoryPatchRepo()
+	}
+	
+	// TODO JHE: Quickly implemented so that it worked, but to be refactored
+	private def adaptArtifactoryRepo() {
+		new File( "${initConfig.yum.artifactory.repo.config.file.path}.new" ).withWriter { w ->
+			def lineNumber = 1
+			new File( initConfig.yum.artifactory.repo.config.file.path ).eachLine { line ->
+				if(lineNumber == 1) {
+					w << initConfig.yum.artifactory.repo.header + System.getProperty("line.separator")
+				}
+				else {
+					if(line.contains("name=")) {
+						w << "name=" + initConfig.yum.artifactory.repo.name + System.getProperty("line.separator")
+					}
+					else if(line.contains("baseurl=")) {
+						w << "baseurl=" + initConfig.yum.artifactory.repo.baseurl + System.getProperty("line.separator")
+					}
+					else {
+						w << line + System.getProperty("line.separator")
+					}
+				}
+				lineNumber++
+			}
+		}
+		
+		if(dryRun) {
+			new File("${initConfig.yum.artifactory.repo.config.file.path}.dryrun").delete()
+			Files.copy(new File("${initConfig.yum.artifactory.repo.config.file.path}.new").toPath(), new File("${initConfig.yum.artifactory.repo.config.file.path}.dryrun").toPath() )
+			new File("${initConfig.yum.artifactory.repo.config.file.path}.new").delete()
+		}
+		else {
+			new File("${initConfig.yum.artifactory.repo.config.file.path}").delete()
+			Files.copy(new File("${initConfig.yum.artifactory.repo.config.file.path}.new").toPath(), new File("${initConfig.yum.artifactory.repo.config.file.path}").toPath() )
+			new File("${initConfig.yum.artifactory.repo.config.file.path}.new").delete()
+		}
+	}
+
+	// TODO JHE: Quickly implemented so that it worked, but to be refactored
+	private def adaptArtifactoryPatchRepo() {
+		new File( "${initConfig.yum.artifactory.patch.repo.config.file.path}.new" ).withWriter { w ->
+			def lineNumber = 1
+			new File( initConfig.yum.artifactory.patch.repo.config.file.path ).eachLine { line ->
+				if(lineNumber == 1) {
+					w << initConfig.yum.artifactory.patch.repo.header + System.getProperty("line.separator")
+				}
+				else {
+					if(line.contains("name=")) {
+						w << "name=" + initConfig.yum.artifactory.patch.repo.name + System.getProperty("line.separator")
+					}
+					else if(line.contains("baseurl=")) {
+						w << "baseurl=" + initConfig.yum.artifactory.patch.repo.baseurl + System.getProperty("line.separator")
+					}
+					else {
+						w << line + System.getProperty("line.separator")
+					}
+				}
+				lineNumber++
+			}
+		}
+		
+		if(dryRun) {
+			new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.dryrun").delete()
+			Files.copy(new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.new").toPath(), new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.dryrun").toPath())
+			new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.new").delete()
+		}
+		else {
+			new File("${initConfig.yum.artifactory.patch.repo.config.file.path}").delete()
+			Files.copy(new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.new").toPath(), new File("${initConfig.yum.artifactory.patch.repo.config.file.path}").toPath())
+			new File("${initConfig.yum.artifactory.patch.repo.config.file.path}.new").delete()
+		}
 	}
 	
 	private def removeJenkinsNodes() {

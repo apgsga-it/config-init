@@ -1,0 +1,5 @@
+[apg-artifactory-patch]
+gpgcheck=0
+name=APG Artifactory Patch Repository
+enabled=1
+baseurl=https://ops:prodPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumpatchrepo
