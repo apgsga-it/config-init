@@ -395,7 +395,7 @@ class PatchInitConfigTest extends Specification {
 			mavenSettings.servers.server.each({s -> 
 				Assert.that(s.password.equals("newMavenUserpwd"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
 				Assert.that(s.username.equals("newMavenUsername"), "Maven settings.xml, server pwd wrongly set for ${s.id}")
-				Assert.that(s.id in ["central-test","snapshots-test","releases-test"], "Maven settings.xml, id wrongly set for ${s.id}")
+				Assert.that(s.id in ["central","snapshots","releases"], "Maven settings.xml, id wrongly set for ${s.id}")
 			})
 			
 			mavenSettings.profiles.size() == 1
@@ -413,9 +413,11 @@ class PatchInitConfigTest extends Specification {
 				Assert.that(pluginRepo.url in ["https://artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/public-test","https://artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/public-snapshots-test"])
 			})
 			
-			// TODO JHE : check that profile Id is OK
 			defaultProfile.profile.id == "artifactory-test"
 			mavenSettings.activeProfiles.getAt(0).activeProfile == "artifactory-test"
+			
+			defaultProfile.profile.properties.distributionManagementRepositoryUrl.equals("https://artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/releases-test")
+			defaultProfile.profile.properties.snapshotRepositoryUrl.equals("https://artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/snapshots-test")
 	}
 	
 	def "PatchInitConfig validate init did the job for gradle.properties"() {

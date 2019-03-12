@@ -277,7 +277,16 @@ class PatchInitConfigClient {
 		adaptMavenSettingsRepository(mavenSettings)
 		adaptMavenSettingsPluginRepository(mavenSettings)
 		adaptMavenSettingsProfileIds(mavenSettings)
+		adaptMavenSettingsProperties(mavenSettings)
 		saveXmlConfiguration(mavenSettings, initConfig.maven.config.file.path)
+	}
+	
+	private def adaptMavenSettingsProperties(def mavenSettings) {
+		NodeChild defaultProfile = mavenSettings.profiles.getAt(0)
+		def String newDistributionManagementRepositoryUrl = "${defaultProfile.profile.properties.distributionManagementRepositoryUrl}${initConfig.maven.repository.suffix}"
+		def String newSnapshotRepositoryUrl = "${defaultProfile.profile.properties.snapshotRepositoryUrl}${initConfig.maven.repository.suffix}"
+		defaultProfile.profile.properties.distributionManagementRepositoryUrl = newDistributionManagementRepositoryUrl
+		defaultProfile.profile.properties.snapshotRepositoryUrl = newSnapshotRepositoryUrl
 	}
 	
 	private def adaptMavenSettingsProfileIds(def mavenSettings) {
@@ -316,8 +325,6 @@ class PatchInitConfigClient {
 		mavenSettings.servers.server.each({s ->
 			s.username = initConfig.maven.servers.server.username
 			s.password = initConfig.maven.servers.server.password
-			def String newId = "${s.id}${initConfig.maven.servers.server.suffix}"
-			s.id = newId
 		})
 	}
 	
