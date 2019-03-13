@@ -439,10 +439,12 @@ class PatchInitConfigClient {
 	
 	private def backupFile(def originalFileName) {
 		def originalFile = new File(originalFileName)
-		def backupFile = new File("${originalFileName}.backup")
+		def backupFile = new File("${originalFileName}.backupFromConfigInit")
 		if(!dryRun) {
-			Files.copy(originalFile.toPath(), backupFile.toPath())
-			println "Backup created for ${originalFileName} : ${backupFile.getPath()}"
+			if(!Files.exists(backupFile.toPath())) {
+				Files.copy(originalFile.toPath(), backupFile.toPath())
+				println "Backup created for ${originalFileName} : ${backupFile.getPath()}"
+			}
 		}
 		else {
 			println "Dryrun = true ... : ${backupFile.getPath()} would have been created as backup for ${originalFileName}"

@@ -19,6 +19,8 @@ import spock.lang.Specification
 
 class PatchInitConfigTest extends Specification {
 	
+	def backupExtension = ".backupFromConfigInit"
+	
 	def usageString = "usage: patchinitcli.sh -[h|i|]"
 	
 	def etcOptPath = "src/test/resources/etc/opt"
@@ -35,9 +37,9 @@ class PatchInitConfigTest extends Specification {
 	
 	def artifactoryPatchRepoConfigFileName = "${yumConfigPath}/apg-artifactory-patch.repo"
 	
-	def artifactoryRepoConfigBackupFileName = "${artifactoryRepoConfigFileName}.backup"
+	def artifactoryRepoConfigBackupFileName = "${artifactoryRepoConfigFileName}${backupExtension}"
 	
-	def artifactoryPatchRepoConfigBackupFileName = "${artifactoryPatchRepoConfigFileName}.backup"
+	def artifactoryPatchRepoConfigBackupFileName = "${artifactoryPatchRepoConfigFileName}${backupExtension}"
 	
 	def artifactoryRepoConfigDryRunFileName = "${artifactoryRepoConfigFileName}.dryrun"
 	
@@ -45,49 +47,49 @@ class PatchInitConfigTest extends Specification {
 	
 	def targetSystemMappingFileName = "${etcOptPath}/apg-patch-common/TargetSystemMappings.json"
 	
-	def targetSystemMappingBackupFileName = "${targetSystemMappingFileName}.backup"
+	def targetSystemMappingBackupFileName = "${targetSystemMappingFileName}${backupExtension}"
 	
 	def targetSystemMappingDryRunFileName = "${targetSystemMappingFileName}.dryrun"
 	
 	def patchCliApplicationPropertiesFileName = "${etcOptPath}/apg-patch-cli/application.properties"
 	
-	def patchCliApplicationPropertiesBackupFileName = "${patchCliApplicationPropertiesFileName}.backup"
+	def patchCliApplicationPropertiesBackupFileName = "${patchCliApplicationPropertiesFileName}${backupExtension}"
 	
 	def patchCliApplicationPropertiesDryRunFileName = "${patchCliApplicationPropertiesFileName}.dryrun"
 	
 	def patchCliOpsPropertiesFileName = "${etcOptPath}/apg-patch-cli/ops.properties"
 	
-	def patchCliOpsPropertiesBackupFileName = "${patchCliOpsPropertiesFileName}.backup"
+	def patchCliOpsPropertiesBackupFileName = "${patchCliOpsPropertiesFileName}${backupExtension}"
 	
 	def patchCliOpsPropertiesDryRunFileName = "${patchCliOpsPropertiesFileName}.dryrun"
 	
 	def patchServerApplicationPropertiesFileName = "${etcOptPath}/apg-patch-service-server/application.properties"
 	
-	def patchServerApplicationPropertiesBackupFileName = "${patchServerApplicationPropertiesFileName}.backup"
+	def patchServerApplicationPropertiesBackupFileName = "${patchServerApplicationPropertiesFileName}${backupExtension}"
 	
 	def patchServerApplicationPropertiesDryRunFileName = "${patchServerApplicationPropertiesFileName}.dryrun"
 	
 	def patchServerOpsPropertiesFileName = "${etcOptPath}/apg-patch-service-server/ops.properties"
 	
-	def patchServerOpsPropertiesBackupFileName = "${patchServerOpsPropertiesFileName}.backup"
+	def patchServerOpsPropertiesBackupFileName = "${patchServerOpsPropertiesFileName}${backupExtension}"
 	
 	def patchServerOpsPropertiesDryRunFileName = "${patchServerOpsPropertiesFileName}.dryrun"
 	
 	def jenkinsConfigXmlFileName = "${varJenkinsPath}/config.xml"
 	
-	def jenkinsConfigXmlBackupFileName = "${jenkinsConfigXmlFileName}.backup"
+	def jenkinsConfigXmlBackupFileName = "${jenkinsConfigXmlFileName}${backupExtension}"
 	
 	def jenkinsConfigXmlDryRunFileName = "${jenkinsConfigXmlFileName}.dryrun"
 	
 	def mavenSettingFileName = "${mavenSettingPath}/settings.xml"
 	
-	def mavenSettingBackupFileName = "${mavenSettingFileName}.backup"
+	def mavenSettingBackupFileName = "${mavenSettingFileName}${backupExtension}"
 	
 	def mavenSettingDryRunFileName = "${mavenSettingFileName}.dryrun"
 	
 	def graddlePropertiesFileName =  "${graddlePropertiesPath}/gradle.properties"
 	
-	def gradlePropertiesBackupFileName = "${graddlePropertiesFileName}.backup"
+	def gradlePropertiesBackupFileName = "${graddlePropertiesFileName}${backupExtension}"
 	
 	def gradlePropertiesDryRunFileName = "${graddlePropertiesFileName}.dryrun"
 	
@@ -544,6 +546,18 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(artifactoryRepoConfigFileContent.contains("name=APG Artifactory Repository Test"))
 			Assert.that(artifactoryRepoConfigFileContent.contains("enabled=1"))
 			Assert.that(artifactoryRepoConfigFileContent.contains("baseurl=https://ops-test:newPassword@artifactory4t4apgsga.jfrog.io/artifactory4t4apgsga/yumrepoprod-test"))
+	}
+	
+	def "PatchInitConfig validate no IO Error when Backup file already exists"() {
+		when:
+			File f = new File(mavenSettingBackupFileName)
+			Files.createFile(f.toPath())
+			PatchInitConfigCli cli = PatchInitConfigCli.create()
+			def result = cli.process(["-dr", "false", "-i", "src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
+
+		then:
+			notThrown(java.nio.file.FileAlreadyExistsException)
+			result.returnCode == 0
 	}
 	
 	private def slurpProperties(def propertyFile) {
