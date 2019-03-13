@@ -32,8 +32,6 @@ class PatchInitConfigClient {
 	
 	def initYumRepoConfig() {
 		println "Initialisation of Yum Repo configuration started ..."
-		backupFile(initConfig.yum.artifactory.repo.config.file.path)
-		backupFile(initConfig.yum.artifactory.patch.repo.config.file.path)
 		adaptYumRepoConfig()
 		println "Initialisation of Yum Repo configuration done!"
 	}
@@ -126,8 +124,14 @@ class PatchInitConfigClient {
 	}
 	
 	private def adaptYumRepoConfig() {
-		adaptArtifactoryRepo()
-		adaptArtifactoryPatchRepo()
+		if(Files.exists(new File(initConfig.yum.artifactory.repo.config.file.path).toPath())) {
+			backupFile(initConfig.yum.artifactory.repo.config.file.path)
+			adaptArtifactoryRepo()
+		}
+		if(Files.exists(new File(initConfig.yum.artifactory.patch.repo.config.file.path).toPath())) {
+			backupFile(initConfig.yum.artifactory.patch.repo.config.file.path)
+			adaptArtifactoryPatchRepo()
+		}
 	}
 	
 	// TODO JHE: Quickly implemented so that it worked, but to be refactored
