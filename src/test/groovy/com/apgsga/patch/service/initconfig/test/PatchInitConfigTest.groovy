@@ -446,6 +446,8 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(gradleProperties.mavenRepoPwd.equals("newMavenRepoPwd"))
 			Assert.that(gradleProperties.patchRepoName.equals("yumpatchrepo-test"))
 			Assert.that(gradleProperties.org.gradle.caching.equals("false"))
+			Assert.that(gradleProperties.mavenReleasesRepoName.equals("releases-test"))
+			Assert.that(gradleProperties.mavenSnapshotsRepoName.equals("snapshots-test"))
 	}
 	
 	def "PatchInitConfig validate dryRun option"() {
