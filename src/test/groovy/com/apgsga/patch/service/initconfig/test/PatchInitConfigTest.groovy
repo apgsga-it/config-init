@@ -81,6 +81,12 @@ class PatchInitConfigTest extends Specification {
 	
 	def jenkinsConfigXmlDryRunFileName = "${jenkinsConfigXmlFileName}.dryrun"
 	
+	def jenkinsModelXmlFileName = "${varJenkinsPath}/jenkins.model.JenkinsLocationConfiguration.xml"
+	
+	def jenkinsModelXmlBackupFileName = "${jenkinsModelXmlFileName}${backupExtension}"
+	
+	def jenkinsModelXmlDryRunFileName = "${jenkinsModelXmlFileName}.dryrun"
+	
 	def mavenSettingFileName = "${mavenSettingPath}/settings.xml"
 	
 	def mavenSettingBackupFileName = "${mavenSettingFileName}${backupExtension}"
@@ -104,6 +110,8 @@ class PatchInitConfigTest extends Specification {
 	def ConfigObject patchServerOpsPropsOriContent
 	
 	def jenkinsConfixXmlOriContent
+	
+	def jenkinsModelXmlOriContent
 	
 	def mavenSettingsOriContent
 	
@@ -362,6 +370,28 @@ class PatchInitConfigTest extends Specification {
 			})
 	}
 	
+	def "PatchInitConfig validate init job did the job for jenkins.model.JenkinsLocationConfiguration.xml"() {
+		when:
+			def jenkinsModelOriFile = new File(jenkinsModelXmlFileName)
+			def startConfig = new XmlSlurper().parse(jenkinsModelOriFile)
+		then:
+			// Ensure we start from the original configuration ....
+			Assert.that(startConfig.jenkinsUrl.equals("https://jenkins.apgsga.ch/") , "Seems the jenkins.model.JenkinsLocationConfiguration.xml file has not been re-initiliased.!")
+		when:
+			PatchInitConfigCli cli = PatchInitConfigCli.create()
+			def result = cli.process(["-dr", "false", "-i","src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
+			def jenkinsModelBackupFile = new File(jenkinsModelXmlBackupFileName)
+		then:
+			result.returnCode == 0
+			jenkinsModelBackupFile.exists()
+			jenkinsModelOriFile.exists()
+			
+			def newConfig = new XmlSlurper().parse(jenkinsModelOriFile)
+			
+			Assert.that(newConfig.jenkinsUrl.equals("http://jenkins-t.apgsga.ch/"))
+			
+	}
+	
 	def "PatchInitConfig validate init job deleted all Jenkins Nodes"() {
 		when:
 			println "First don't do anything, but just verify that nodes exists before calling init cli ..."
@@ -469,6 +499,7 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(!(new File(gradlePropertiesBackupFileName).exists()))
 			Assert.that(!(new File(artifactoryPatchRepoConfigBackupFileName).exists()))
 			Assert.that(!(new File(artifactoryRepoConfigBackupFileName).exists()))
+			Assert.that(!(new File(jenkinsModelXmlBackupFileName).exists()))
 			
 			Assert.that((new File(targetSystemMappingDryRunFileName).exists()))
 			Assert.that((new File(patchCliApplicationPropertiesDryRunFileName).exists()))
@@ -480,6 +511,7 @@ class PatchInitConfigTest extends Specification {
 			Assert.that((new File(gradlePropertiesDryRunFileName).exists()))
 			Assert.that((new File(artifactoryPatchRepoConfigDryRunFileName).exists()))
 			Assert.that((new File(artifactoryRepoConfigDryRunFileName).exists()))
+			Assert.that((new File(jenkinsModelXmlDryRunFileName).exists()))
 		when:
 			// Second scenario, we don't provide -dr option, should be dryRun by default
 			result = cli.process(["-i", "src/test/resources/etc/opt/apg-patch-target-configinit/initconfig.properties"])
@@ -496,6 +528,7 @@ class PatchInitConfigTest extends Specification {
 			Assert.that(!(new File(gradlePropertiesBackupFileName).exists()))
 			Assert.that(!(new File(artifactoryPatchRepoConfigBackupFileName).exists()))
 			Assert.that(!(new File(artifactoryRepoConfigBackupFileName).exists()))
+			Assert.that(!(new File(jenkinsModelXmlBackupFileName).exists()))
 			
 			Assert.that((new File(targetSystemMappingDryRunFileName).exists()))
 			Assert.that((new File(patchCliApplicationPropertiesDryRunFileName).exists()))
@@ -507,6 +540,7 @@ class PatchInitConfigTest extends Specification {
 			Assert.that((new File(gradlePropertiesDryRunFileName).exists()))
 			Assert.that((new File(artifactoryPatchRepoConfigDryRunFileName).exists()))
 			Assert.that((new File(artifactoryRepoConfigDryRunFileName).exists()))
+			Assert.that((new File(jenkinsModelXmlDryRunFileName).exists()))
 	}
 	
 	def "PatchInitConfig validate yum repo configuration"() {
@@ -582,6 +616,7 @@ class PatchInitConfigTest extends Specification {
 		patchServerApplicationPropsOriContent = ConfigInitUtil.slurpProperties(new File(patchServerApplicationPropertiesFileName))
 		patchServerOpsPropsOriContent = ConfigInitUtil.slurpProperties(new File(patchServerOpsPropertiesFileName))
 		jenkinsConfixXmlOriContent = new XmlSlurper().parse(new File(jenkinsConfigXmlFileName))
+		jenkinsModelXmlOriContent = new XmlSlurper().parse(new File(jenkinsModelXmlFileName))
 		mavenSettingsOriContent = new XmlSlurper().parse(new File(mavenSettingFileName))
 		gradlePropertiesOriContent = ConfigInitUtil.slurpProperties(new File(graddlePropertiesFileName))
 		backupArtifactoryRepoFiles()
@@ -626,9 +661,14 @@ class PatchInitConfigTest extends Specification {
 		})
 		
 		XmlUtil xmlUtil = new XmlUtil()
-		FileOutputStream jenkinsFos = new FileOutputStream(new File(jenkinsConfigXmlFileName))
-		xmlUtil.serialize(jenkinsConfixXmlOriContent,jenkinsFos)
-		jenkinsFos.close()
+		
+		FileOutputStream jenkinsConfigXmlFos = new FileOutputStream(new File(jenkinsConfigXmlFileName))
+		xmlUtil.serialize(jenkinsConfixXmlOriContent,jenkinsConfigXmlFos)
+		jenkinsConfigXmlFos.close()
+		
+		FileOutputStream jenkinsModelXmlFos = new FileOutputStream(new File(jenkinsModelXmlFileName))
+		xmlUtil.serialize(jenkinsModelXmlOriContent,jenkinsModelXmlFos)
+		jenkinsModelXmlFos.close()
 		
 		FileOutputStream mavenFos = new FileOutputStream(new File(mavenSettingFileName))
 		xmlUtil.serialize(mavenSettingsOriContent,mavenFos)
@@ -660,6 +700,7 @@ class PatchInitConfigTest extends Specification {
 		new File(gradlePropertiesBackupFileName).delete()
 		new File(artifactoryRepoConfigBackupFileName).delete()
 		new File(artifactoryPatchRepoConfigBackupFileName).delete()
+		new File(jenkinsModelXmlBackupFileName).delete()
 	}
 	
 	private def cleanAllDryrunFile() {
@@ -673,6 +714,7 @@ class PatchInitConfigTest extends Specification {
 		new File(gradlePropertiesDryRunFileName).delete()
 		new File(artifactoryRepoConfigDryRunFileName).delete()
 		new File(artifactoryPatchRepoConfigDryRunFileName).delete()
+		new File(jenkinsModelXmlDryRunFileName).delete()
 	}
 	
 }

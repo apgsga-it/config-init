@@ -39,7 +39,9 @@ class PatchInitConfigClient {
 	def initJenkinsConfig() {
 		println "Initialisation of Jenkins config.xml started ..."
 		backupFile(initConfig.jenkins.jenkinsConfigFileLocation)
-		adaptJenkinsConfig()	
+		adaptJenkinsConfig()
+		backupFile(initConfig.jenkins.jenkinsModelFileLocaltion)
+		adaptJenkinsModelConfig()	
 		removeJenkinsNodes()	
 		println "Initialisation of Jenkins config.xml done!"
 	}
@@ -341,6 +343,12 @@ class PatchInitConfigClient {
 		XmlUtil xmlUtil = new XmlUtil()
 		xmlUtil.serialize(xmlContent,fos)
 		fos.close()
+	}
+	
+	private def adaptJenkinsModelConfig() {
+		def jenkinsModelConfig = new XmlSlurper().parse(new File(initConfig.jenkins.jenkinsModelFileLocaltion))
+		jenkinsModelConfig.jenkinsUrl = initConfig.jenkins.jenkinsUrl
+		saveXmlConfiguration(jenkinsModelConfig,initConfig.jenkins.jenkinsModelFileLocaltion)
 	}
 	
 	private def adaptJenkinsConfig() {
