@@ -493,6 +493,8 @@ Ansprechpartner: S. Brandenberger, J. Helbling, D. Rohner</description>
           <string>Patch</string>
           <string>PATCH_SERVICE_TEST</string>
           <string>xxxxxfail=Informatiktest</string>
+          <string>RELEASES_PATCH_REPO</string>
+          <string>releases/</string>
           <string>REPO_RO_PASSWD</string>
           <string>prodPass</string>
           <string>WINDOWS_INSTALLER_LABEL</string>
