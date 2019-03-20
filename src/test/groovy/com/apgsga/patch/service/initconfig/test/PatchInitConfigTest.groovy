@@ -338,6 +338,7 @@ class PatchInitConfigTest extends Specification {
 			boolean iscvsFwRootOnNextIter = false
 			boolean iscvsRootOnNextIter = false
 			boolean isRepoRoPasswdOnNextIter = false
+			boolean isDbPatchRepoOnNextIter = false
 			newConfig.globalNodeProperties."hudson.slaves.EnvironmentVariablesNodeProperty".envVars."tree-map".string.size() > 0
 			newConfig.globalNodeProperties."hudson.slaves.EnvironmentVariablesNodeProperty".envVars."tree-map".string.each({p -> 
 				
@@ -356,6 +357,11 @@ class PatchInitConfigTest extends Specification {
 					isRepoRoPasswdOnNextIter = false
 				}
 				
+				if(isDbPatchRepoOnNextIter) {
+					Assert.that(p.equals("dbpatch-test/") , "DB_PATCH_REPO within Jenkins config.xml wrong!")
+					isDbPatchRepoOnNextIter = false
+				}
+				
 				if(p.equals("CVS_FW_ROOT")) {
 					iscvsFwRootOnNextIter = true
 				}
@@ -366,6 +372,10 @@ class PatchInitConfigTest extends Specification {
 				
 				if(p.equals("REPO_RO_PASSWD")) {
 					isRepoRoPasswdOnNextIter = true
+				}
+				
+				if(p.equals("DB_PATCH_REPO")) {
+					isDbPatchRepoOnNextIter = true
 				}
 			})
 	}

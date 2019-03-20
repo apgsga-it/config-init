@@ -360,6 +360,7 @@ class PatchInitConfigClient {
 		boolean iscvsFwRootOnNextIter = false
 		boolean iscvsRootOnNextIter = false
 		boolean isRepoRoPasswdOnNextIter = false
+		boolean isDbPatchRepoOnNextIter = false
 		
 		// JHE: Well, rather bad to iterate like below ... but we need to deal with such a list:
 		/*
@@ -392,6 +393,11 @@ class PatchInitConfigClient {
 				isRepoRoPasswdOnNextIter = false
 			}
 			
+			if(isDbPatchRepoOnNextIter) {
+				p.replaceBody(initConfig.jenkins.dbPatchRepo)
+				isDbPatchRepoOnNextIter = false
+			}
+			
 			if(p.equals("CVS_FW_ROOT")) {
 				iscvsFwRootOnNextIter = true
 			}
@@ -402,6 +408,10 @@ class PatchInitConfigClient {
 			
 			if(p.equals("REPO_RO_PASSWD")) {
 				isRepoRoPasswdOnNextIter = true
+			}
+			
+			if(p.equals("DB_PATCH_REPO")) {
+				isDbPatchRepoOnNextIter = true
 			}
 		})
 		

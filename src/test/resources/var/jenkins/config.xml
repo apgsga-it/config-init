@@ -479,6 +479,8 @@ Ansprechpartner: S. Brandenberger, J. Helbling, D. Rohner</description>
           <string>:ext:svcCvsClient@cvs.apgsga.ch:/var/local/cvs/root</string>
           <string>CVS_RSH</string>
           <string>ssh</string>
+          <string>DB_PATCH_REPO</string>
+          <string>dbpatch/</string>
           <string>GITHUB_JENKINS_VERSION</string>
           <string>refs/heads/1.0.x</string>
           <string>GRADLE_OPTS</string>
